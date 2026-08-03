@@ -20,11 +20,18 @@ export function Contact() {
     const email = String(form.get("email") ?? "").trim();
     const message = String(form.get("message") ?? "").trim();
 
-    if (name.length < 2 || name.length > 100) return toast.error("Please enter your full name.");
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) || email.length > 255)
-      return toast.error("Please enter a valid email address.");
-    if (message.length < 10 || message.length > 1000)
-      return toast.error("Message must be between 10 and 1000 characters.");
+    if (name.length < 2 || name.length > 100) {
+      toast.error("Please enter your full name.");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) || email.length > 255) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+    if (message.length < 10 || message.length > 1000) {
+      toast.error("Message must be between 10 and 1000 characters.");
+      return;
+    }
 
     setSending(true);
     const body = `Name: ${name}\nEmail: ${email}\n\n${message}`;
@@ -34,6 +41,7 @@ export function Contact() {
     toast.success("Opening your email client…");
     setSending(false);
   };
+
 
   return (
     <footer id="contact" className="relative scroll-mt-24 border-t pt-24 pb-10">
