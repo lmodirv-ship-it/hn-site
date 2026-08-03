@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Mail, Globe, MessageCircle, User, Sparkles, Send } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,17 @@ const WHATSAPP = "212600000000";
 
 export function Contact() {
   const [sending, setSending] = useState(false);
+  const [message, setMessage] = useState("");
+
+  // Prefill from the AI Project Planner ("Launch this project now").
+  useEffect(() => {
+    const brief = sessionStorage.getItem("hn_project_brief");
+    if (brief) {
+      setMessage(brief);
+      sessionStorage.removeItem("hn_project_brief");
+      document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, []);
 
   const onSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
