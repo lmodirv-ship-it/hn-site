@@ -9,13 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { StatusBadge, formatMoney } from "@/components/portal/ui";
+import { StatusBadge, PriorityBadge, formatMoney, formatDate } from "@/components/portal/ui";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
 });
 
-const TABS = ["Orders", "Clients", "Tickets", "Pricing", "Case studies"] as const;
+const TABS = ["Orders", "Clients", "Tickets", "Billing", "Pricing", "Case studies"] as const;
 type Tab = (typeof TABS)[number];
 
 function AdminPage() {
@@ -83,6 +83,7 @@ function AdminPage() {
           {tab === "Orders" && <OrdersAdmin />}
           {tab === "Clients" && <ClientsAdmin />}
           {tab === "Tickets" && <TicketsAdmin />}
+          {tab === "Billing" && <BillingAdmin />}
           {tab === "Pricing" && <PricingAdmin />}
           {tab === "Case studies" && <CaseStudiesAdmin />}
         </div>
@@ -195,39 +196,96 @@ function ClientsAdmin() {
 
 function TicketsAdmin() {
   const tickets = useTable("tickets");
+  const templates = useQuery({
+    queryKey: ["admin", "response_templates"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("response_templates")
+        .select("*")
+        .eq("is_active", true)
+        .order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
   const update = useRowUpdate("tickets");
   if (tickets.isLoading) return <Loader2 className="size-5 animate-spin text-cyan" />;
+
+  const sorted = [...(tickets.data ?? [])].sort((a, b) => {
+    const rank: Record<string, number> = { critical: 0, medium: 1, low: 2 };
+    return (rank[a["priority"]] ?? 1) - (rank[b["priority"]] ?? 1);
+  });
+
   return (
     <Panel>
-      {(tickets.data ?? []).map((t) => (
+      {sorted.map((t) => (
         <article key={t["id"]} className="glass rounded-2xl p-5">
           <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-3">
             <h2 className="truncate font-medium">{t["subject"]}</h2>
-            <StatusBadge status={t["status"]} />
+            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+              <PriorityBadge priority={t["priority"]} />
+              <StatusBadge status={t["status"]} />
+            </div>
           </div>
+          <p className="mt-1 text-xs text-muted-foreground capitalize">
+            {String(t["request_type"] ?? "feature").replace(/_/g, " ")} request
+          </p>
           <p className="mt-2 text-sm text-muted-foreground">{t["message"]}</p>
           <form
-            className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto_auto]"
+            className="mt-4 grid gap-3"
             onSubmit={(e) => {
               e.preventDefault();
               const fd = new FormData(e.currentTarget);
+              const status = String(fd.get("status"));
               update.mutate({
                 id: t["id"],
-                values: { admin_reply: String(fd.get("admin_reply") ?? ""), status: fd.get("status") },
+                values: {
+                  admin_reply: String(fd.get("admin_reply") ?? ""),
+                  status,
+                  priority: fd.get("priority"),
+                  resolved_at: status === "resolved" ? new Date().toISOString() : null,
+                },
               });
             }}
           >
-            <Field name="admin_reply" label="Reply" defaultValue={t["admin_reply"] ?? ""} />
-            <Select name="status" label="Status" defaultValue={t["status"]} options={["open", "in_progress", "resolved", "closed"]} />
-            <div className="flex items-end">
-              <Button type="submit" variant="hero" size="sm">
-                Save
-              </Button>
+            <div className="grid gap-1.5">
+              <Label htmlFor={`tpl-${t["id"]}`} className="text-xs text-muted-foreground">
+                Automated response template
+              </Label>
+              <select
+                id={`tpl-${t["id"]}`}
+                defaultValue=""
+                onChange={(e) => {
+                  const body = e.target.value;
+                  if (!body) return;
+                  const form = e.target.closest("form");
+                  const reply = form?.querySelector<HTMLInputElement>('input[name="admin_reply"]');
+                  if (reply) reply.value = body;
+                }}
+                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+              >
+                <option value="">Choose a template…</option>
+                {(templates.data ?? []).map((tpl) => (
+                  <option key={tpl.id} value={tpl.body}>
+                    {tpl.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-[1fr_auto_auto_auto]">
+              <Field name="admin_reply" label="Reply" defaultValue={t["admin_reply"] ?? ""} />
+              <Select name="status" label="Status" defaultValue={t["status"]} options={["open", "in_progress", "resolved", "closed"]} />
+              <Select name="priority" label="Priority" defaultValue={t["priority"]} options={["low", "medium", "critical"]} />
+              <div className="flex items-end">
+                <Button type="submit" variant="hero" size="sm">
+                  Save
+                </Button>
+              </div>
             </div>
           </form>
         </article>
       ))}
-      {(tickets.data ?? []).length === 0 && <Empty label="No tickets yet." />}
+      {sorted.length === 0 && <Empty label="No tickets yet." />}
     </Panel>
   );
 }
@@ -272,6 +330,187 @@ function PricingAdmin() {
         </article>
       ))}
     </Panel>
+  );
+}
+
+function BillingAdmin() {
+  const qc = useQueryClient();
+  const clients = useTable("profiles");
+  const invoices = useQuery({
+    queryKey: ["admin", "invoices"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("invoices")
+        .select("*")
+        .order("issued_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+  const subs = useQuery({
+    queryKey: ["admin", "subscriptions"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("subscriptions")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const createInvoice = useMutation({
+    mutationFn: async (values: Record<string, unknown>) => {
+      const { error } = await (supabase.from("invoices") as any).insert(values);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Invoice issued.");
+      qc.invalidateQueries({ queryKey: ["admin", "invoices"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const createSub = useMutation({
+    mutationFn: async (values: Record<string, unknown>) => {
+      const { error } = await (supabase.from("subscriptions") as any).insert(values);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Subscription created.");
+      qc.invalidateQueries({ queryKey: ["admin", "subscriptions"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const clientOptions = (clients.data ?? []).map((c) => ({
+    id: c["id"] as string,
+    label: (c["full_name"] as string) || (c["email"] as string) || "Client",
+  }));
+
+  return (
+    <div className="grid gap-6">
+      <form
+        className="glass rounded-2xl p-6"
+        onSubmit={(e) => {
+          e.preventDefault();
+          const form = e.currentTarget;
+          const fd = new FormData(form);
+          createSub.mutate({
+            user_id: fd.get("user_id"),
+            plan_name: String(fd.get("plan_name") ?? "Managed Subscription"),
+            interval: fd.get("interval"),
+            price: Number(fd.get("price")),
+            status: fd.get("status"),
+            current_period_end: String(fd.get("current_period_end") || "") || null,
+          });
+          form.reset();
+        }}
+      >
+        <h2 className="font-display text-lg font-semibold">New subscription</h2>
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <ClientSelect options={clientOptions} />
+          <Field name="plan_name" label="Plan name" defaultValue="Managed Subscription" />
+          <Select name="interval" label="Interval" defaultValue="monthly" options={["monthly", "yearly"]} />
+          <Field name="price" label="Price" type="number" defaultValue={99} />
+          <Select name="status" label="Status" defaultValue="active" options={["trialing", "active", "past_due", "canceled"]} />
+          <Field name="current_period_end" label="Renews on" type="date" />
+        </div>
+        <Button type="submit" variant="hero" size="sm" className="mt-4" disabled={createSub.isPending}>
+          Create subscription
+        </Button>
+      </form>
+
+      <form
+        className="glass rounded-2xl p-6"
+        onSubmit={(e) => {
+          e.preventDefault();
+          const form = e.currentTarget;
+          const fd = new FormData(form);
+          const amount = Number(fd.get("amount"));
+          createInvoice.mutate({
+            user_id: fd.get("user_id"),
+            invoice_number: String(fd.get("invoice_number") ?? "").trim(),
+            description: String(fd.get("description") ?? ""),
+            amount,
+            status: fd.get("status"),
+            due_at: String(fd.get("due_at") || "") || null,
+            line_items: [{ description: String(fd.get("description") ?? "Services"), amount }],
+          });
+          form.reset();
+        }}
+      >
+        <h2 className="font-display text-lg font-semibold">Issue an invoice</h2>
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <ClientSelect options={clientOptions} />
+          <Field
+            name="invoice_number"
+            label="Invoice number"
+            defaultValue={`HN-${new Date().getFullYear()}-${Math.floor(Math.random() * 9000 + 1000)}`}
+            required
+          />
+          <Field name="amount" label="Amount" type="number" defaultValue={0} />
+          <Field name="description" label="Description" />
+          <Select name="status" label="Status" defaultValue="due" options={["due", "paid", "overdue", "void"]} />
+          <Field name="due_at" label="Due date" type="date" />
+        </div>
+        <Button type="submit" variant="hero" size="sm" className="mt-4" disabled={createInvoice.isPending}>
+          <Plus className="size-4" aria-hidden />
+          Issue invoice
+        </Button>
+      </form>
+
+      <Panel>
+        {(subs.data ?? []).map((s) => (
+          <div key={s.id} className="glass grid grid-cols-[minmax(0,1fr)_auto] gap-3 rounded-2xl p-5">
+            <div className="min-w-0">
+              <p className="truncate font-medium">{s.plan_name}</p>
+              <p className="text-sm text-muted-foreground">
+                {formatMoney(Number(s.price), s.currency)} / {s.interval} · renews{" "}
+                {formatDate(s.current_period_end)}
+              </p>
+            </div>
+            <StatusBadge status={s.status} />
+          </div>
+        ))}
+        {(invoices.data ?? []).map((i) => (
+          <div key={i.id} className="glass grid grid-cols-[minmax(0,1fr)_auto] gap-3 rounded-2xl p-5">
+            <div className="min-w-0">
+              <p className="truncate font-medium">{i.invoice_number}</p>
+              <p className="text-sm text-muted-foreground">
+                {formatMoney(Number(i.amount), i.currency)} · issued {formatDate(i.issued_at)}
+              </p>
+            </div>
+            <StatusBadge status={i.status} />
+          </div>
+        ))}
+        {(subs.data ?? []).length === 0 && (invoices.data ?? []).length === 0 && (
+          <Empty label="No subscriptions or invoices yet." />
+        )}
+      </Panel>
+    </div>
+  );
+}
+
+function ClientSelect({ options }: { options: { id: string; label: string }[] }) {
+  return (
+    <div className="grid gap-1.5">
+      <Label htmlFor="user_id" className="text-xs text-muted-foreground">
+        Client
+      </Label>
+      <select
+        id="user_id"
+        name="user_id"
+        required
+        className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+      >
+        {options.map((o) => (
+          <option key={o.id} value={o.id}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 }
 

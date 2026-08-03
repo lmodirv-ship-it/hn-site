@@ -10,7 +10,7 @@ export const Route = createFileRoute("/case-studies/$slug")({
     if (!study) throw notFound();
     return study;
   },
-  head: ({ loaderData }) => {
+  head: ({ params, loaderData }) => {
     if (!loaderData) {
       return {
         meta: [{ title: "Case study unavailable — HN Group" }, { name: "robots", content: "noindex" }],
@@ -18,6 +18,12 @@ export const Route = createFileRoute("/case-studies/$slug")({
     }
     const t = `${loaderData.title} — HN Group case study`;
     const d = loaderData.summary ?? "A project designed, built and deployed by HN Group.";
+    const canonical = `https://hn-site.lovable.app/case-studies/${params.slug}`;
+    const image =
+      typeof loaderData.cover_image === "string" && loaderData.cover_image.startsWith("https://")
+        ? loaderData.cover_image
+        : null;
+
     return {
       meta: [
         { title: t },
@@ -25,7 +31,70 @@ export const Route = createFileRoute("/case-studies/$slug")({
         { property: "og:title", content: t },
         { property: "og:description", content: d },
         { property: "og:type", content: "article" },
+        { property: "og:url", content: canonical },
         { name: "twitter:card", content: "summary_large_image" },
+        ...(image
+          ? [
+              { property: "og:image", content: image },
+              { name: "twitter:image", content: image },
+            ]
+          : []),
+      ],
+      links: [{ rel: "canonical", href: canonical }],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@graph": [
+              {
+                "@type": "SoftwareApplication",
+                name: loaderData.title,
+                applicationCategory: "WebApplication",
+                operatingSystem: "Web",
+                description: d,
+                url: loaderData.live_url ?? canonical,
+                ...(image ? { image } : {}),
+                ...(Array.isArray(loaderData.features) && loaderData.features.length > 0
+                  ? { featureList: loaderData.features }
+                  : {}),
+                offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+                author: {
+                  "@type": "Organization",
+                  name: "HN Group",
+                  url: "https://www.hn-groupe.org",
+                },
+              },
+              {
+                "@type": "Article",
+                headline: t,
+                description: d,
+                ...(image ? { image } : {}),
+                datePublished: loaderData.created_at,
+                dateModified: loaderData.updated_at ?? loaderData.created_at,
+                mainEntityOfPage: canonical,
+                author: { "@type": "Organization", name: "HN Group" },
+                publisher: {
+                  "@type": "Organization",
+                  name: "HN Group",
+                  url: "https://www.hn-groupe.org",
+                },
+              },
+              {
+                "@type": "BreadcrumbList",
+                itemListElement: [
+                  {
+                    "@type": "ListItem",
+                    position: 1,
+                    name: "Case studies",
+                    item: "https://hn-site.lovable.app/case-studies",
+                  },
+                  { "@type": "ListItem", position: 2, name: loaderData.title, item: canonical },
+                ],
+              },
+            ],
+          }),
+        },
       ],
     };
   },

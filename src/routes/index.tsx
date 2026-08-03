@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, BookOpen } from "lucide-react";
+import { ArrowRight, BookOpen, Wand2 } from "lucide-react";
 import { Nav } from "@/components/site/Nav";
 import { Hero } from "@/components/site/Hero";
 import { Portfolio } from "@/components/site/Portfolio";
@@ -55,6 +55,34 @@ function CaseStudyBanner() {
   );
 }
 
+function PlannerBanner() {
+  return (
+    <section className="mx-auto max-w-6xl px-5 py-16" aria-labelledby="planner-heading">
+      <div className="glass-strong glow-primary grid gap-6 rounded-2xl p-8 sm:p-10 lg:grid-cols-[1fr_auto] lg:items-center">
+        <div>
+          <span className="inline-flex items-center gap-2 rounded-full bg-surface-2 px-3 py-1 text-xs text-cyan">
+            <Wand2 className="size-3.5" aria-hidden />
+            Free AI tool
+          </span>
+          <h2 id="planner-heading" className="mt-4 font-display text-3xl font-bold sm:text-4xl">
+            Plan your build with the <span className="text-gradient">AI Project Planner</span>
+          </h2>
+          <p className="mt-3 max-w-2xl text-muted-foreground">
+            Type one line about your idea and get a full project scope: modules, features, tech
+            stack, delivery time and a realistic budget — in seconds, free.
+          </p>
+        </div>
+        <Button asChild variant="hero" size="xl">
+          <Link to="/planner">
+            Generate my scope
+            <ArrowRight className="size-4" aria-hidden />
+          </Link>
+        </Button>
+      </div>
+    </section>
+  );
+}
+
 function Index() {
   return (
     <div className="min-h-screen bg-background">
@@ -62,6 +90,7 @@ function Index() {
       <main>
         <Hero />
         <Portfolio />
+        <PlannerBanner />
         <CaseStudyBanner />
         <Packages />
         <Estimator />

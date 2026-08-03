@@ -77,6 +77,75 @@ export type Database = {
         }
         Relationships: []
       }
+      invoices: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          description: string | null
+          due_at: string | null
+          id: string
+          invoice_number: string
+          issued_at: string
+          line_items: Json
+          order_id: string | null
+          paid_at: string | null
+          status: string
+          subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          description?: string | null
+          due_at?: string | null
+          id?: string
+          invoice_number: string
+          issued_at?: string
+          line_items?: Json
+          order_id?: string | null
+          paid_at?: string | null
+          status?: string
+          subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          description?: string | null
+          due_at?: string | null
+          id?: string
+          invoice_number?: string
+          issued_at?: string
+          line_items?: Json
+          order_id?: string | null
+          paid_at?: string | null
+          status?: string
+          subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           created_at: string
@@ -206,6 +275,123 @@ export type Database = {
         }
         Relationships: []
       }
+      project_briefs: {
+        Row: {
+          budget_max: number | null
+          budget_min: number | null
+          contact_email: string | null
+          created_at: string
+          features: string[]
+          id: string
+          idea: string
+          project_title: string | null
+          summary: string | null
+          tech_stack: string[]
+          timeline: string | null
+          user_id: string | null
+        }
+        Insert: {
+          budget_max?: number | null
+          budget_min?: number | null
+          contact_email?: string | null
+          created_at?: string
+          features?: string[]
+          id?: string
+          idea: string
+          project_title?: string | null
+          summary?: string | null
+          tech_stack?: string[]
+          timeline?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          budget_max?: number | null
+          budget_min?: number | null
+          contact_email?: string | null
+          created_at?: string
+          features?: string[]
+          id?: string
+          idea?: string
+          project_title?: string | null
+          summary?: string | null
+          tech_stack?: string[]
+          timeline?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      response_templates: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          created_at: string
+          currency: string
+          current_period_end: string | null
+          id: string
+          interval: string
+          plan_name: string
+          price: number
+          provider: string
+          provider_subscription_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          current_period_end?: string | null
+          id?: string
+          interval?: string
+          plan_name?: string
+          price?: number
+          provider?: string
+          provider_subscription_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          current_period_end?: string | null
+          id?: string
+          interval?: string
+          plan_name?: string
+          price?: number
+          provider?: string
+          provider_subscription_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       tickets: {
         Row: {
           admin_reply: string | null
@@ -213,6 +399,9 @@ export type Database = {
           id: string
           message: string
           order_id: string | null
+          priority: string
+          request_type: string
+          resolved_at: string | null
           status: string
           subject: string
           updated_at: string
@@ -224,6 +413,9 @@ export type Database = {
           id?: string
           message: string
           order_id?: string | null
+          priority?: string
+          request_type?: string
+          resolved_at?: string | null
           status?: string
           subject: string
           updated_at?: string
@@ -235,6 +427,9 @@ export type Database = {
           id?: string
           message?: string
           order_id?: string | null
+          priority?: string
+          request_type?: string
+          resolved_at?: string | null
           status?: string
           subject?: string
           updated_at?: string
