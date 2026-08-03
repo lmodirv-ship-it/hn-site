@@ -333,6 +333,187 @@ function PricingAdmin() {
   );
 }
 
+function BillingAdmin() {
+  const qc = useQueryClient();
+  const clients = useTable("profiles");
+  const invoices = useQuery({
+    queryKey: ["admin", "invoices"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("invoices")
+        .select("*")
+        .order("issued_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+  const subs = useQuery({
+    queryKey: ["admin", "subscriptions"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("subscriptions")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const createInvoice = useMutation({
+    mutationFn: async (values: Record<string, unknown>) => {
+      const { error } = await (supabase.from("invoices") as any).insert(values);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Invoice issued.");
+      qc.invalidateQueries({ queryKey: ["admin", "invoices"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const createSub = useMutation({
+    mutationFn: async (values: Record<string, unknown>) => {
+      const { error } = await (supabase.from("subscriptions") as any).insert(values);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Subscription created.");
+      qc.invalidateQueries({ queryKey: ["admin", "subscriptions"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const clientOptions = (clients.data ?? []).map((c) => ({
+    id: c["id"] as string,
+    label: (c["full_name"] as string) || (c["email"] as string) || "Client",
+  }));
+
+  return (
+    <div className="grid gap-6">
+      <form
+        className="glass rounded-2xl p-6"
+        onSubmit={(e) => {
+          e.preventDefault();
+          const form = e.currentTarget;
+          const fd = new FormData(form);
+          createSub.mutate({
+            user_id: fd.get("user_id"),
+            plan_name: String(fd.get("plan_name") ?? "Managed Subscription"),
+            interval: fd.get("interval"),
+            price: Number(fd.get("price")),
+            status: fd.get("status"),
+            current_period_end: String(fd.get("current_period_end") || "") || null,
+          });
+          form.reset();
+        }}
+      >
+        <h2 className="font-display text-lg font-semibold">New subscription</h2>
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <ClientSelect options={clientOptions} />
+          <Field name="plan_name" label="Plan name" defaultValue="Managed Subscription" />
+          <Select name="interval" label="Interval" defaultValue="monthly" options={["monthly", "yearly"]} />
+          <Field name="price" label="Price" type="number" defaultValue={99} />
+          <Select name="status" label="Status" defaultValue="active" options={["trialing", "active", "past_due", "canceled"]} />
+          <Field name="current_period_end" label="Renews on" type="date" />
+        </div>
+        <Button type="submit" variant="hero" size="sm" className="mt-4" disabled={createSub.isPending}>
+          Create subscription
+        </Button>
+      </form>
+
+      <form
+        className="glass rounded-2xl p-6"
+        onSubmit={(e) => {
+          e.preventDefault();
+          const form = e.currentTarget;
+          const fd = new FormData(form);
+          const amount = Number(fd.get("amount"));
+          createInvoice.mutate({
+            user_id: fd.get("user_id"),
+            invoice_number: String(fd.get("invoice_number") ?? "").trim(),
+            description: String(fd.get("description") ?? ""),
+            amount,
+            status: fd.get("status"),
+            due_at: String(fd.get("due_at") || "") || null,
+            line_items: [{ description: String(fd.get("description") ?? "Services"), amount }],
+          });
+          form.reset();
+        }}
+      >
+        <h2 className="font-display text-lg font-semibold">Issue an invoice</h2>
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <ClientSelect options={clientOptions} />
+          <Field
+            name="invoice_number"
+            label="Invoice number"
+            defaultValue={`HN-${new Date().getFullYear()}-${Math.floor(Math.random() * 9000 + 1000)}`}
+            required
+          />
+          <Field name="amount" label="Amount" type="number" defaultValue={0} />
+          <Field name="description" label="Description" />
+          <Select name="status" label="Status" defaultValue="due" options={["due", "paid", "overdue", "void"]} />
+          <Field name="due_at" label="Due date" type="date" />
+        </div>
+        <Button type="submit" variant="hero" size="sm" className="mt-4" disabled={createInvoice.isPending}>
+          <Plus className="size-4" aria-hidden />
+          Issue invoice
+        </Button>
+      </form>
+
+      <Panel>
+        {(subs.data ?? []).map((s) => (
+          <div key={s.id} className="glass grid grid-cols-[minmax(0,1fr)_auto] gap-3 rounded-2xl p-5">
+            <div className="min-w-0">
+              <p className="truncate font-medium">{s.plan_name}</p>
+              <p className="text-sm text-muted-foreground">
+                {formatMoney(Number(s.price), s.currency)} / {s.interval} · renews{" "}
+                {formatDate(s.current_period_end)}
+              </p>
+            </div>
+            <StatusBadge status={s.status} />
+          </div>
+        ))}
+        {(invoices.data ?? []).map((i) => (
+          <div key={i.id} className="glass grid grid-cols-[minmax(0,1fr)_auto] gap-3 rounded-2xl p-5">
+            <div className="min-w-0">
+              <p className="truncate font-medium">{i.invoice_number}</p>
+              <p className="text-sm text-muted-foreground">
+                {formatMoney(Number(i.amount), i.currency)} · issued {formatDate(i.issued_at)}
+              </p>
+            </div>
+            <StatusBadge status={i.status} />
+          </div>
+        ))}
+        {(subs.data ?? []).length === 0 && (invoices.data ?? []).length === 0 && (
+          <Empty label="No subscriptions or invoices yet." />
+        )}
+      </Panel>
+    </div>
+  );
+}
+
+function ClientSelect({ options }: { options: { id: string; label: string }[] }) {
+  return (
+    <div className="grid gap-1.5">
+      <Label htmlFor="user_id" className="text-xs text-muted-foreground">
+        Client
+      </Label>
+      <select
+        id="user_id"
+        name="user_id"
+        required
+        className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+      >
+        {options.map((o) => (
+          <option key={o.id} value={o.id}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 function toList(value: FormDataEntryValue | null) {
   return String(value ?? "")
     .split(",")
