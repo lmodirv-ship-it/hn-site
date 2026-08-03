@@ -12,7 +12,7 @@ function useCountUp(target: number, decimals = 0, duration = 1600) {
     let raf = 0;
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (!entry.isIntersecting) return;
+        if (!entry?.isIntersecting) return;
         observer.disconnect();
         const start = performance.now();
         const tick = (now: number) => {
