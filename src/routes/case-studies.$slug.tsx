@@ -88,7 +88,7 @@ function CaseStudyPage() {
 
         {gallery.length > 1 && (
           <div className="mt-3 flex flex-wrap gap-2">
-            {gallery.map((g, i) => (
+            {gallery.map((g: string, i: number) => (
               <button
                 key={g}
                 type="button"

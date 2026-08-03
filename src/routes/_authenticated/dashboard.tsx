@@ -224,7 +224,10 @@ function Dashboard() {
               const fd = new FormData(e.currentTarget);
               const project_name = String(fd.get("project_name") ?? "").trim();
               const description = String(fd.get("description") ?? "").trim();
-              if (project_name.length < 2) return toast.error("Enter a project name.");
+              if (project_name.length < 2) {
+                toast.error("Enter a project name.");
+                return;
+              }
               createOrder.mutate({ project_name, description });
               e.currentTarget.reset();
             }}
@@ -254,8 +257,10 @@ function Dashboard() {
               const subject = String(fd.get("subject") ?? "").trim();
               const message = String(fd.get("message") ?? "").trim();
               const order_id = String(fd.get("order_id") ?? "");
-              if (subject.length < 3 || message.length < 5)
-                return toast.error("Add a subject and a short description.");
+              if (subject.length < 3 || message.length < 5) {
+                toast.error("Add a subject and a short description.");
+                return;
+              }
               createTicket.mutate({ subject, message, order_id });
               e.currentTarget.reset();
             }}

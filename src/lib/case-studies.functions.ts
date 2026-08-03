@@ -2,6 +2,21 @@ import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
+export type CaseStudy = Database["public"]["Tables"]["case_studies"]["Row"];
+export type CaseStudyCard = Pick<
+  CaseStudy,
+  | "id"
+  | "slug"
+  | "title"
+  | "client_name"
+  | "category"
+  | "summary"
+  | "cover_image"
+  | "tech_stack"
+  | "live_url"
+  | "created_at"
+>;
+
 function publicClient() {
   const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
   const url = process.env["SUPABASE_URL"]!;
@@ -29,7 +44,7 @@ export const listCaseStudies = createServerFn({ method: "GET" }).handler(async (
     .eq("published", true)
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
-  return data ?? [];
+  return (data ?? []) as CaseStudyCard[];
 });
 
 export const getCaseStudy = createServerFn({ method: "GET" })
@@ -42,5 +57,5 @@ export const getCaseStudy = createServerFn({ method: "GET" })
       .eq("published", true)
       .maybeSingle();
     if (error) throw new Error(error.message);
-    return data;
+    return (data as CaseStudy | null) ?? null;
   });
