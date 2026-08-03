@@ -39,8 +39,8 @@ export function Contact() {
       toast.error("Please enter a valid email address.");
       return;
     }
-    if (message.length < 10 || message.length > 1000) {
-      toast.error("Message must be between 10 and 1000 characters.");
+    if (message.length < 10 || message.length > 4000) {
+      toast.error("Message must be between 10 and 4000 characters.");
       return;
     }
 
@@ -123,7 +123,9 @@ export function Contact() {
                 id="message"
                 name="message"
                 rows={5}
-                maxLength={1000}
+                maxLength={4000}
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
                 placeholder="Tell us what you want to launch and when."
                 required
               />
