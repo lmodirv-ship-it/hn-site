@@ -7,6 +7,7 @@ import { Packages } from "@/components/site/Packages";
 import { Estimator } from "@/components/site/Estimator";
 import { Consulting } from "@/components/site/Consulting";
 import { Contact, WhatsAppFab } from "@/components/site/Contact";
+import { ChatWidget } from "@/components/site/ChatWidget";
 import { Button } from "@/components/ui/button";
 
 const title = "HN Group — Launch Your Digital Product in Hours, Not Months";
