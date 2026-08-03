@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { StatusBadge, formatMoney } from "@/components/portal/ui";
+import { StatusBadge, PriorityBadge, formatMoney, formatDate } from "@/components/portal/ui";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
@@ -195,39 +195,96 @@ function ClientsAdmin() {
 
 function TicketsAdmin() {
   const tickets = useTable("tickets");
+  const templates = useQuery({
+    queryKey: ["admin", "response_templates"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("response_templates")
+        .select("*")
+        .eq("is_active", true)
+        .order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
   const update = useRowUpdate("tickets");
   if (tickets.isLoading) return <Loader2 className="size-5 animate-spin text-cyan" />;
+
+  const sorted = [...(tickets.data ?? [])].sort((a, b) => {
+    const rank: Record<string, number> = { critical: 0, medium: 1, low: 2 };
+    return (rank[a["priority"]] ?? 1) - (rank[b["priority"]] ?? 1);
+  });
+
   return (
     <Panel>
-      {(tickets.data ?? []).map((t) => (
+      {sorted.map((t) => (
         <article key={t["id"]} className="glass rounded-2xl p-5">
           <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-3">
             <h2 className="truncate font-medium">{t["subject"]}</h2>
-            <StatusBadge status={t["status"]} />
+            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+              <PriorityBadge priority={t["priority"]} />
+              <StatusBadge status={t["status"]} />
+            </div>
           </div>
+          <p className="mt-1 text-xs text-muted-foreground capitalize">
+            {String(t["request_type"] ?? "feature").replace(/_/g, " ")} request
+          </p>
           <p className="mt-2 text-sm text-muted-foreground">{t["message"]}</p>
           <form
-            className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto_auto]"
+            className="mt-4 grid gap-3"
             onSubmit={(e) => {
               e.preventDefault();
               const fd = new FormData(e.currentTarget);
+              const status = String(fd.get("status"));
               update.mutate({
                 id: t["id"],
-                values: { admin_reply: String(fd.get("admin_reply") ?? ""), status: fd.get("status") },
+                values: {
+                  admin_reply: String(fd.get("admin_reply") ?? ""),
+                  status,
+                  priority: fd.get("priority"),
+                  resolved_at: status === "resolved" ? new Date().toISOString() : null,
+                },
               });
             }}
           >
-            <Field name="admin_reply" label="Reply" defaultValue={t["admin_reply"] ?? ""} />
-            <Select name="status" label="Status" defaultValue={t["status"]} options={["open", "in_progress", "resolved", "closed"]} />
-            <div className="flex items-end">
-              <Button type="submit" variant="hero" size="sm">
-                Save
-              </Button>
+            <div className="grid gap-1.5">
+              <Label htmlFor={`tpl-${t["id"]}`} className="text-xs text-muted-foreground">
+                Automated response template
+              </Label>
+              <select
+                id={`tpl-${t["id"]}`}
+                defaultValue=""
+                onChange={(e) => {
+                  const body = e.target.value;
+                  if (!body) return;
+                  const form = e.target.closest("form");
+                  const reply = form?.querySelector<HTMLInputElement>('input[name="admin_reply"]');
+                  if (reply) reply.value = body;
+                }}
+                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+              >
+                <option value="">Choose a template…</option>
+                {(templates.data ?? []).map((tpl) => (
+                  <option key={tpl.id} value={tpl.body}>
+                    {tpl.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-[1fr_auto_auto_auto]">
+              <Field name="admin_reply" label="Reply" defaultValue={t["admin_reply"] ?? ""} />
+              <Select name="status" label="Status" defaultValue={t["status"]} options={["open", "in_progress", "resolved", "closed"]} />
+              <Select name="priority" label="Priority" defaultValue={t["priority"]} options={["low", "medium", "critical"]} />
+              <div className="flex items-end">
+                <Button type="submit" variant="hero" size="sm">
+                  Save
+                </Button>
+              </div>
             </div>
           </form>
         </article>
       ))}
-      {(tickets.data ?? []).length === 0 && <Empty label="No tickets yet." />}
+      {sorted.length === 0 && <Empty label="No tickets yet." />}
     </Panel>
   );
 }
