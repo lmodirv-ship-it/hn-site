@@ -156,7 +156,7 @@ export function WhatsAppFab() {
       target="_blank"
       rel="noreferrer"
       aria-label="Chat with HN Group on WhatsApp"
-      className="animate-float glow-cyan fixed right-5 bottom-5 z-50 grid size-14 place-items-center rounded-full bg-cyan text-cyan-foreground transition-transform hover:scale-110"
+      className="animate-float glow-cyan fixed right-6 bottom-24 z-50 grid size-14 place-items-center rounded-full bg-cyan text-cyan-foreground transition-transform hover:scale-110"
     >
       <MessageCircle className="size-6" aria-hidden />
     </a>
