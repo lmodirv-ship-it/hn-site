@@ -92,12 +92,20 @@ function Dashboard() {
   });
 
   const createTicket = useMutation({
-    mutationFn: async (payload: { subject: string; message: string; order_id: string }) => {
+    mutationFn: async (payload: {
+      subject: string;
+      message: string;
+      order_id: string;
+      priority: string;
+      request_type: string;
+    }) => {
       const { error } = await supabase.from("tickets").insert({
         user_id: user!.id,
         subject: payload.subject,
         message: payload.message,
         order_id: payload.order_id || null,
+        priority: payload.priority,
+        request_type: payload.request_type,
       });
       if (error) throw error;
     },
