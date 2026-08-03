@@ -265,15 +265,19 @@ function Dashboard() {
               const subject = String(fd.get("subject") ?? "").trim();
               const message = String(fd.get("message") ?? "").trim();
               const order_id = String(fd.get("order_id") ?? "");
+              const priority = String(fd.get("priority") ?? "medium");
+              const request_type = String(fd.get("request_type") ?? "feature");
               if (subject.length < 3 || message.length < 5) {
                 toast.error("Add a subject and a short description.");
                 return;
               }
-              createTicket.mutate({ subject, message, order_id });
+              createTicket.mutate({ subject, message, order_id, priority, request_type });
               e.currentTarget.reset();
             }}
           >
-            <h2 className="font-display text-lg font-semibold">Modification ticket</h2>
+            <h2 className="font-display text-lg font-semibold">
+              Project support &amp; maintenance ticket
+            </h2>
             <div className="mt-4 grid gap-3">
               <div className="grid gap-2">
                 <Label htmlFor="order_id">Related project</Label>
@@ -289,6 +293,35 @@ function Dashboard() {
                     </option>
                   ))}
                 </select>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-2">
+                  <Label htmlFor="request_type">Request type</Label>
+                  <select
+                    id="request_type"
+                    name="request_type"
+                    className="h-9 rounded-md border border-input bg-transparent px-3 text-sm capitalize"
+                  >
+                    <option value="design">Design update</option>
+                    <option value="feature">New feature</option>
+                    <option value="bug">Bug fix</option>
+                    <option value="content">Content change</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="priority">Priority</Label>
+                  <select
+                    id="priority"
+                    name="priority"
+                    defaultValue="medium"
+                    className="h-9 rounded-md border border-input bg-transparent px-3 text-sm capitalize"
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="critical">Critical</option>
+                  </select>
+                </div>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="subject">Subject</Label>
