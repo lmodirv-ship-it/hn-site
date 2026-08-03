@@ -16,18 +16,25 @@ export type Database = {
     Tables: {
       case_studies: {
         Row: {
+          api_specs: string[]
           category: string
           client_name: string | null
           cover_image: string | null
           created_at: string
           created_by: string | null
+          domain: string | null
           features: string[]
           gallery: string[]
           id: string
           live_url: string | null
           problem: string | null
           published: boolean
+          purpose: string | null
+          rating: number
           results: string | null
+          screenshot_desktop: string | null
+          screenshot_mobile: string | null
+          screenshot_tablet: string | null
           slug: string
           solution: string | null
           summary: string | null
@@ -36,18 +43,25 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          api_specs?: string[]
           category?: string
           client_name?: string | null
           cover_image?: string | null
           created_at?: string
           created_by?: string | null
+          domain?: string | null
           features?: string[]
           gallery?: string[]
           id?: string
           live_url?: string | null
           problem?: string | null
           published?: boolean
+          purpose?: string | null
+          rating?: number
           results?: string | null
+          screenshot_desktop?: string | null
+          screenshot_mobile?: string | null
+          screenshot_tablet?: string | null
           slug: string
           solution?: string | null
           summary?: string | null
@@ -56,18 +70,25 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          api_specs?: string[]
           category?: string
           client_name?: string | null
           cover_image?: string | null
           created_at?: string
           created_by?: string | null
+          domain?: string | null
           features?: string[]
           gallery?: string[]
           id?: string
           live_url?: string | null
           problem?: string | null
           published?: boolean
+          purpose?: string | null
+          rating?: number
           results?: string | null
+          screenshot_desktop?: string | null
+          screenshot_mobile?: string | null
+          screenshot_tablet?: string | null
           slug?: string
           solution?: string | null
           summary?: string | null
