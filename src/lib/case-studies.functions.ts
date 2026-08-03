@@ -15,6 +15,9 @@ export type CaseStudyCard = Pick<
   | "tech_stack"
   | "live_url"
   | "created_at"
+  | "domain"
+  | "rating"
+  | "features"
 >;
 
 function publicClient() {
