@@ -127,7 +127,7 @@ export function ChatWidget() {
                     : "text-foreground",
                 )}
               >
-                {m.content}
+                {m.role === "assistant" ? m.content.replace(/\*\*/g, "") : m.content}
               </div>
             ))}
             {loading && (
