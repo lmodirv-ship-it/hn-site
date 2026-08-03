@@ -99,6 +99,7 @@ function Index() {
       </main>
       <Contact />
       <WhatsAppFab />
+      <ChatWidget />
     </div>
   );
 }
