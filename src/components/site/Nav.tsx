@@ -63,6 +63,12 @@ export function Nav() {
             AI Planner
           </Link>
           <Link
+            to="/blog"
+            className="rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
+          >
+            Blog
+          </Link>
+          <Link
             to="/case-studies"
             className="rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
           >
@@ -114,6 +120,13 @@ export function Nav() {
               className="rounded-lg px-3 py-3 text-sm text-cyan hover:bg-surface"
             >
               AI Planner
+            </Link>
+            <Link
+              to="/blog"
+              onClick={() => setOpen(false)}
+              className="rounded-lg px-3 py-3 text-sm text-muted-foreground hover:bg-surface hover:text-foreground"
+            >
+              Blog
             </Link>
             <Link
               to="/case-studies"

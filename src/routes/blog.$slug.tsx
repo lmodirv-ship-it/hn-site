@@ -13,7 +13,7 @@ import {
   Zap,
 } from "lucide-react";
 import { getCaseStudy } from "@/lib/case-studies.functions";
-import { Stars } from "./blog.index";
+import { Stars } from "@/components/site/Stars";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/blog/$slug")({

@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, Globe, Search, Star } from "lucide-react";
+import { Stars } from "@/components/site/Stars";
 import { listCaseStudies, type CaseStudyCard } from "@/lib/case-studies.functions";
 import { Button } from "@/components/ui/button";
 
@@ -33,26 +34,6 @@ export const Route = createFileRoute("/blog/")({
     </div>
   ),
 });
-
-export function Stars({ rating, className = "" }: { rating: number; className?: string }) {
-  const rounded = Math.round(rating);
-  return (
-    <span
-      className={`inline-flex items-center gap-0.5 ${className}`}
-      aria-label={`Rated ${rounded} out of 5`}
-    >
-      {[1, 2, 3, 4, 5].map((i) => (
-        <Star
-          key={i}
-          aria-hidden
-          className={
-            i <= rounded ? "size-3.5 fill-cyan text-cyan" : "size-3.5 text-muted-foreground/40"
-          }
-        />
-      ))}
-    </span>
-  );
-}
 
 function BlogHub() {
   const studies = Route.useLoaderData() as CaseStudyCard[];
