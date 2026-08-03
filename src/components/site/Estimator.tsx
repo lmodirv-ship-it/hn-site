@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Mail, MessageCircle, Calculator } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { formatMoney } from "@/components/portal/ui";
 
 const WHATSAPP = "212600000000";
 const EMAIL = "info@hnchat.net";
@@ -119,7 +120,7 @@ Estimated range: $${price.min} – $${price.max}`;
               <Calculator className="size-6 text-cyan" aria-hidden />
               <p className="mt-4 text-sm text-muted-foreground">Estimated investment</p>
               <p aria-live="polite" className="mt-1 font-display text-4xl font-bold text-gradient">
-                ${price.min.toLocaleString()} – ${price.max.toLocaleString()}
+                {formatMoney(price.min)} – {formatMoney(price.max)}
               </p>
               <ul className="mt-5 space-y-1.5 text-sm text-muted-foreground">
                 <li>{type}</li>
