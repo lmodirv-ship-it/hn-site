@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, ArrowLeft } from "lucide-react";
-import { listCaseStudies } from "@/lib/case-studies.functions";
+import { listCaseStudies, type CaseStudyCard } from "@/lib/case-studies.functions";
 import { Button } from "@/components/ui/button";
 
 const title = "Case Studies & Blog — 200+ apps built by HN Group";
@@ -29,7 +29,7 @@ export const Route = createFileRoute("/case-studies/")({
 });
 
 function CaseStudiesIndex() {
-  const studies = Route.useLoaderData();
+  const studies = Route.useLoaderData() as CaseStudyCard[];
 
   return (
     <div className="hero-aura min-h-screen pb-24">
@@ -75,7 +75,7 @@ function CaseStudiesIndex() {
                 <h2 className="mt-3 font-display text-lg font-semibold">{s.title}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">{s.summary}</p>
                 <ul className="mt-4 flex flex-wrap gap-1.5">
-                  {s.tech_stack.map((t) => (
+                  {(s.tech_stack ?? []).map((t: string) => (
                     <li
                       key={t}
                       className="rounded-md bg-surface-2 px-2 py-1 text-[11px] text-muted-foreground"
