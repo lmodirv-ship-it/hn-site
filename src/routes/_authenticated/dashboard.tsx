@@ -18,7 +18,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { StatusBadge, formatMoney } from "@/components/portal/ui";
+import { StatusBadge, PriorityBadge, formatMoney } from "@/components/portal/ui";
+import { Billing } from "@/components/portal/Billing";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
@@ -349,8 +350,14 @@ function Dashboard() {
               <article key={t.id} className="glass rounded-2xl p-5">
                 <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
                   <h3 className="truncate font-medium">{t.subject}</h3>
-                  <StatusBadge status={t.status} />
+                  <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+                    <PriorityBadge priority={t.priority} />
+                    <StatusBadge status={t.status} />
+                  </div>
                 </div>
+                <p className="mt-1 text-xs text-muted-foreground capitalize">
+                  {t.request_type.replace(/_/g, " ")} request
+                </p>
                 <p className="mt-2 text-sm text-muted-foreground">{t.message}</p>
                 {t.admin_reply && (
                   <p className="mt-3 rounded-xl bg-surface-2 p-3 text-sm">
@@ -361,6 +368,9 @@ function Dashboard() {
             ))}
           </div>
         </section>
+
+        {user && <Billing userId={user.id} billedTo={profile.data?.full_name || user.email || ""} />}
+
 
         <section className="glass mt-10 rounded-2xl p-6">
           <h2 className="font-display text-lg font-semibold">Profile</h2>
