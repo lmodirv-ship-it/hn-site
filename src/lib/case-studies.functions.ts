@@ -15,6 +15,9 @@ export type CaseStudyCard = Pick<
   | "tech_stack"
   | "live_url"
   | "created_at"
+  | "domain"
+  | "rating"
+  | "features"
 >;
 
 function publicClient() {
@@ -39,7 +42,7 @@ export const listCaseStudies = createServerFn({ method: "GET" }).handler(async (
   const { data, error } = await publicClient()
     .from("case_studies")
     .select(
-      "id, slug, title, client_name, category, summary, cover_image, tech_stack, live_url, created_at",
+      "id, slug, title, client_name, category, summary, cover_image, tech_stack, live_url, created_at, domain, rating, features",
     )
     .eq("published", true)
     .order("created_at", { ascending: false });
