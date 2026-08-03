@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
 });
 
-const TABS = ["Orders", "Clients", "Tickets", "Pricing", "Case studies"] as const;
+const TABS = ["Orders", "Clients", "Tickets", "Billing", "Pricing", "Case studies"] as const;
 type Tab = (typeof TABS)[number];
 
 function AdminPage() {
@@ -83,6 +83,7 @@ function AdminPage() {
           {tab === "Orders" && <OrdersAdmin />}
           {tab === "Clients" && <ClientsAdmin />}
           {tab === "Tickets" && <TicketsAdmin />}
+          {tab === "Billing" && <BillingAdmin />}
           {tab === "Pricing" && <PricingAdmin />}
           {tab === "Case studies" && <CaseStudiesAdmin />}
         </div>
