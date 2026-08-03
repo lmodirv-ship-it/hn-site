@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
-import { Menu, X, Sparkles } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { Menu, X, Sparkles, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 
 const links = [
   { href: "#portfolio", label: "Portfolio" },
@@ -13,6 +15,7 @@ const links = [
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const { user, loading } = useAuth();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -20,6 +23,9 @@ export function Nav() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  const authLabel = user ? "Dashboard" : "Sign in";
+  const authTo = user ? "/dashboard" : "/auth";
 
   return (
     <header
@@ -40,7 +46,7 @@ export function Nav() {
           </span>
         </a>
 
-        <div className="hidden items-center gap-1 md:flex">
+        <div className="hidden items-center gap-1 lg:flex">
           {links.map((l) => (
             <a
               key={l.href}
@@ -50,9 +56,23 @@ export function Nav() {
               {l.label}
             </a>
           ))}
+          <Link
+            to="/case-studies"
+            className="rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
+          >
+            Case Studies
+          </Link>
         </div>
 
-        <div className="hidden md:block">
+        <div className="hidden items-center gap-2 lg:flex">
+          {!loading && (
+            <Button asChild variant="ghostGlow" size="sm">
+              <Link to={authTo}>
+                {user && <LayoutDashboard className="size-4" aria-hidden />}
+                {authLabel}
+              </Link>
+            </Button>
+          )}
           <Button asChild variant="hero" size="sm">
             <a href="#contact">Book a Demo</a>
           </Button>
@@ -63,14 +83,14 @@ export function Nav() {
           aria-label={open ? "Close menu" : "Open menu"}
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
-          className="grid size-10 shrink-0 place-items-center rounded-lg glass md:hidden"
+          className="grid size-10 shrink-0 place-items-center rounded-lg glass lg:hidden"
         >
           {open ? <X className="size-5" /> : <Menu className="size-5" />}
         </button>
       </nav>
 
       {open && (
-        <div className="glass-strong border-t md:hidden">
+        <div className="glass-strong border-t lg:hidden">
           <div className="mx-auto flex max-w-6xl flex-col p-4">
             {links.map((l) => (
               <a
@@ -82,6 +102,20 @@ export function Nav() {
                 {l.label}
               </a>
             ))}
+            <Link
+              to="/case-studies"
+              onClick={() => setOpen(false)}
+              className="rounded-lg px-3 py-3 text-sm text-muted-foreground hover:bg-surface hover:text-foreground"
+            >
+              Case Studies
+            </Link>
+            <Link
+              to={authTo}
+              onClick={() => setOpen(false)}
+              className="rounded-lg px-3 py-3 text-sm text-muted-foreground hover:bg-surface hover:text-foreground"
+            >
+              {authLabel}
+            </Link>
             <Button asChild variant="hero" className="mt-2">
               <a href="#contact" onClick={() => setOpen(false)}>
                 Book a Demo
